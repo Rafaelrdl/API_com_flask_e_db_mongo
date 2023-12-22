@@ -1,0 +1,81 @@
+"""
+ Criando uma API com Flask, integrando o mongoDB como extra
+"""
+import dns
+import pymongo as pyM
+from flask_ngrok import run_with_ngrok
+from flask import jsonify
+from flask import Flask
+
+# Criação da instância do Flask
+app = Flask(__name__)
+run_with_ngrok(app)
+
+dns.resolver.default_resolver=dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers=['8.8.8.8']
+
+# Se conecta ao Mongo Atlas
+client = pyM.MongoClient("mongodb+srv://rafaelrdlessa:rsxME70F74p5tywZ@cluster0.zp7rz2e.mongodb.net/?retryWrites=true&w=majority")
+
+# Cria o DB
+db = client.API
+
+# Cria a coleção 'API'
+collection = db.API_collection
+
+people_information = [{
+    "number": "1",
+    "name": "Mahesh",
+    "age": "25",
+    "city": "Bangalore",
+    "Country": "India"
+},
+                      {
+    "number": "2",
+    "name": "Alex",
+    "age": "26",
+    "city": "Longon",
+    "Country": "Uk"
+},
+                      {
+    "number": "3",
+    "name": "David",
+    "age": "27",
+    "city": "San Francisco",
+    "Country": "Usa"
+},
+                      {
+    "number": "4",
+    "name": "John",
+    "age": "28",
+    "city": "Toronto",
+    "Country": "Canada"
+},
+                      {
+    "number": "5",
+    "name": "Chris",
+    "age": "29",
+    "city": "Paris",
+    "Country": "France"
+}]
+
+# Inserindo o Doc 'people_information' no DB API
+people_informations = db.API
+people_informations.insert_many(people_information)
+
+
+
+@app.route("/")
+def home():
+    """
+    Endpoint para obter dados da coleção 'people_informations'.
+
+    Returns:
+        jsonify: Uma resposta JSON contendo os documentos da coleção.
+        """
+    documents = people_informations.find()
+    data = [{**doc, '_id': str(doc['_id'])} for doc in documents]
+    return jsonify(data)
+
+if __name__ == "__main__":
+    app.run()
